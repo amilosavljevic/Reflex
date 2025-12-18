@@ -7,12 +7,13 @@ using Reflex.Generics;
 using Reflex.Injectors;
 using Reflex.Logging;
 using Reflex.Resolvers;
+using Reflex.Resolvers.OpenGenerics;
 
 namespace Reflex.Core
 {
     public sealed class Container : IDisposable
     {
-        public static Container ProjectContainer { get; internal set; } 
+        public static Container ProjectContainer { get; internal set; }
         public string Name { get; }
         public Container Parent { get; }
         internal List<Container> Children { get; } = new();
@@ -21,7 +22,7 @@ namespace Reflex.Core
 #if UNITY_EDITOR
         internal static readonly List<Container> RootContainers = new();
 #endif
-        
+
         internal Container(string name, Container parent, Dictionary<Type, List<IResolver>> resolversByContract, DisposableCollection disposables)
         {
             Diagnosis.RegisterBuildCallSite(this);
@@ -69,7 +70,7 @@ namespace Reflex.Core
             extend?.Invoke(builder);
             return builder.Build();
         }
-        
+
         public T Construct<T>()
         {
             return (T)Construct(typeof(T));
@@ -78,10 +79,10 @@ namespace Reflex.Core
         public object Construct(Type concrete)
         {
             var instance = ConstructorInjector.Construct(concrete, this);
-            AttributeInjector.Inject(instance, this);   
+            AttributeInjector.Inject(instance, this);
             return instance;
         }
-        
+
         public object Resolve(Type type)
         {
             if (type.IsEnumerable(out var elementType))
@@ -89,17 +90,39 @@ namespace Reflex.Core
                 return All(elementType).CastDynamic(elementType);
             }
 
-            var resolvers = GetResolvers(type);
-            var lastResolver = resolvers.Last();
-            var resolved = lastResolver.Resolve(this);
+            var resolverToUse = GetLastExactlyMatchingResolver(type)
+                ?? GetMatchingOpenGenericResolver(type)
+                ?? throw new UnknownContractException(type);
+
+            var resolved = resolverToUse.Resolve(this);
             return resolved;
+        }
+
+        private IResolver GetLastExactlyMatchingResolver(Type type)
+        {
+            var resolvers = GetResolvers(type);
+            return resolvers.LastOrDefault();
+        }
+
+        private IResolver GetMatchingOpenGenericResolver(Type type)
+        {
+            // Look for open-generic type
+            if (!type.IsGenericType)
+                return null;
+
+            var openGeneric = type.GetGenericTypeDefinition();
+            var resolvers = GetResolvers(openGeneric);
+            var openGenericResolverCollection = resolvers.LastOrDefault();
+            var closedGenericResolver = ((OpenGenericTypeResolversCollection)openGenericResolverCollection)
+                ?.GetOrCreateClosedResolver(type);
+            return closedGenericResolver;
         }
 
         public TContract Resolve<TContract>()
         {
             return (TContract)Resolve(typeof(TContract));
         }
-        
+
         public object Single(Type type)
         {
             return GetResolvers(type).Single().Resolve(this);
@@ -133,7 +156,7 @@ namespace Reflex.Core
 
             throw new UnknownContractException(contract);
         }
-        
+
         private void OverrideSelfInjection()
         {
             ResolversByContract[typeof(Container)] = new List<IResolver> { new SingletonValueResolver(this) };
