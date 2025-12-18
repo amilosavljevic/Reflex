@@ -100,8 +100,8 @@ namespace Reflex.Core
 
         private IResolver GetLastExactlyMatchingResolver(Type type)
         {
-            var resolvers = GetResolvers(type);
-            return resolvers.LastOrDefault();
+            var resolvers = GetResolversOrDefault(type);
+            return resolvers?.LastOrDefault();
         }
 
         private IResolver GetMatchingOpenGenericResolver(Type type)
@@ -111,8 +111,8 @@ namespace Reflex.Core
                 return null;
 
             var openGeneric = type.GetGenericTypeDefinition();
-            var resolvers = GetResolvers(openGeneric);
-            var openGenericResolverCollection = resolvers.LastOrDefault();
+            var resolvers = GetResolversOrDefault(openGeneric);
+            var openGenericResolverCollection = resolvers?.LastOrDefault();
             var closedGenericResolver = ((OpenGenericTypeResolversCollection)openGenericResolverCollection)
                 ?.GetOrCreateClosedResolver(type);
             return closedGenericResolver;
@@ -147,15 +147,12 @@ namespace Reflex.Core
                 : Enumerable.Empty<TContract>();
         }
 
-        private IEnumerable<IResolver> GetResolvers(Type contract)
-        {
-            if (ResolversByContract.TryGetValue(contract, out var resolvers))
-            {
-                return resolvers;
-            }
+        private IEnumerable<IResolver> GetResolversOrDefault(Type contract) =>
+            ResolversByContract.GetValueOrDefault(contract);
 
-            throw new UnknownContractException(contract);
-        }
+        private IEnumerable<IResolver> GetResolvers(Type contract) =>
+            GetResolversOrDefault(contract)
+            ?? throw new UnknownContractException(contract);
 
         private void OverrideSelfInjection()
         {
