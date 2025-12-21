@@ -21,6 +21,23 @@ namespace Reflex.Core
 
         public static Binding Validated(IResolver resolver, Type concrete, params Type[] contracts)
         {
+            if (concrete.IsGenericTypeDefinition)
+                return ValidateOpenGenerics(resolver, concrete, contracts);
+
+            foreach (var contract in contracts)
+            {
+                if (!contract.IsAssignableFrom(concrete))
+                {
+                    throw new ContractDefinitionException(concrete, contract);
+                }
+            }
+
+            return new Binding(resolver, contracts);
+        }
+
+        // TODO: Merge with upper method?
+        private static Binding ValidateOpenGenerics(IResolver resolver, Type concrete, Type[] contracts)
+        {
             foreach (var contract in contracts)
             {
                 if (!contract.IsAssignableFrom(concrete))

@@ -1,5 +1,4 @@
 ﻿using System;
-using Reflex.Extensions;
 
 namespace Reflex.Pooling
 {

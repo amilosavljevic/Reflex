@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Reflex.Core;
 using Reflex.Extensions;
-using Reflex.Injectors;
 using Reflex.Resolvers;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;

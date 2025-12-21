@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Reflex.Generics;
 using Reflex.Resolvers;
+using Reflex.Resolvers.OpenGenerics;
 
 namespace Reflex.Core
 {
@@ -43,8 +44,8 @@ namespace Reflex.Core
                     resolvers.Add(binding.Resolver);
                 }
             }
-            
-            Bindings.Clear();   
+
+            Bindings.Clear();
             var container = new Container(Name, Parent, resolversByContract, disposables);
             OnContainerBuilt?.Invoke(container);
             return container;
@@ -55,7 +56,7 @@ namespace Reflex.Core
             Name = name;
             return this;
         }
-        
+
         public ContainerBuilder SetParent(Container parent)
         {
             Parent = parent;
@@ -64,7 +65,11 @@ namespace Reflex.Core
 
         public ContainerBuilder AddSingleton(Type concrete, params Type[] contracts)
         {
-            return Add(concrete, contracts, new SingletonTypeResolver(concrete));
+            var resolver = concrete.IsGenericTypeDefinition
+                ? (IResolver)new SingletonOpenGenericTypeResolversCollection(concrete)
+                : new SingletonTypeResolver(concrete);
+
+            return Add(concrete, contracts, resolver);
         }
 
         public ContainerBuilder AddSingleton(Type concrete)
@@ -100,7 +105,11 @@ namespace Reflex.Core
 
         public ContainerBuilder AddTransient(Type concrete, params Type[] contracts)
         {
-            return Add(concrete, contracts, new TransientTypeResolver(concrete));
+            var resolver = concrete.IsGenericTypeDefinition
+                ? (IResolver)new TransientOpenGenericTypeResolversCollection(concrete)
+                : new TransientTypeResolver(concrete);
+
+            return Add(concrete, contracts, resolver);
         }
 
         public ContainerBuilder AddTransient(Type concrete)
@@ -123,12 +132,16 @@ namespace Reflex.Core
         {
             return AddTransient(factory, typeof(T));
         }
-        
+
         // Scoped
-        
+
         public ContainerBuilder AddScoped(Type concrete, params Type[] contracts)
         {
-            return Add(concrete, contracts, new ScopedTypeResolver(concrete));
+            var resolver = concrete.IsGenericTypeDefinition
+                ? (IResolver)new ScopedOpenGenericTypeResolversCollection(concrete)
+                : new ScopedTypeResolver(concrete);
+
+            return Add(concrete, contracts, resolver);
         }
 
         public ContainerBuilder AddScoped(Type concrete)
