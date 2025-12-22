@@ -3,7 +3,7 @@ using Reflex.Enums;
 
 namespace Reflex.Resolvers.OpenGenerics
 {
-    public class SingletonOpenGenericTypeResolversCollection : OpenGenericTypeResolversCollection
+    internal class SingletonOpenGenericTypeResolversCollection : OpenGenericTypeResolversCollection
     {
         public override Lifetime Lifetime => Lifetime.Transient;
 

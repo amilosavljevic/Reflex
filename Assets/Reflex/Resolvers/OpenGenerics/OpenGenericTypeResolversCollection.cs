@@ -12,7 +12,7 @@ namespace Reflex.Resolvers.OpenGenerics
     /// should create a closed-generic resolver for the specific closed type being requested, cache it here, and delegate
     /// the resolution to that closed-generic resolver.
     /// </summary>
-    public abstract class OpenGenericTypeResolversCollection : IResolver
+    internal abstract class OpenGenericTypeResolversCollection : IResolver
     {
         private readonly Type _openGenericConcreteType;
         private readonly ConcurrentDictionary<Type, IResolver> _closedResolvers = new();
