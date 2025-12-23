@@ -24,7 +24,7 @@ namespace Reflex.Resolvers.OpenGenerics
         {
             _openGenericConcreteType = openGenericConcreteType;
             // caching the factory method to avoid allocating a new delegate on each GetOrAdd call
-            _cachedResolverFactory = CreateOpenGenericResolverForType;
+            _cachedResolverFactory = CreateClosedGenericResolverForType;
         }
 
         public IResolver GetOrCreateClosedResolver(Type type) =>
@@ -33,7 +33,7 @@ namespace Reflex.Resolvers.OpenGenerics
         /// <summary>
         /// For passed closed-generic contract type, creates a closed-generic resolver for the corresponding closed concrete type.
         /// </summary>
-        private IResolver CreateOpenGenericResolverForType(Type type)
+        private IResolver CreateClosedGenericResolverForType(Type type)
         {
             // TODO: optimize?
             var closedConcreteType = _openGenericConcreteType.MakeGenericType(type.GetGenericArguments());

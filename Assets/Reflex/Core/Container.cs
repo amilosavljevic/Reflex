@@ -90,7 +90,7 @@ namespace Reflex.Core
                 return All(elementType).CastDynamic(elementType);
             }
 
-            var resolverToUse = GetLastExactlyMatchingResolver(type)
+            var resolverToUse = GetLastExactlyMatchingResolverIfAny(type)
                 ?? GetMatchingOpenGenericResolver(type)
                 ?? throw new UnknownContractException(type);
 
@@ -98,7 +98,7 @@ namespace Reflex.Core
             return resolved;
         }
 
-        private IResolver GetLastExactlyMatchingResolver(Type type)
+        private IResolver GetLastExactlyMatchingResolverIfAny(Type type)
         {
             var resolvers = GetResolversOrDefault(type);
             return resolvers?.LastOrDefault();
@@ -111,8 +111,7 @@ namespace Reflex.Core
                 return null;
 
             var openGeneric = type.GetGenericTypeDefinition();
-            var resolvers = GetResolversOrDefault(openGeneric);
-            var openGenericResolverCollection = resolvers?.LastOrDefault();
+            var openGenericResolverCollection = GetLastExactlyMatchingResolverIfAny(openGeneric);
             var closedGenericResolver = ((OpenGenericTypeResolversCollection)openGenericResolverCollection)
                 ?.GetOrCreateClosedResolver(type);
             return closedGenericResolver;

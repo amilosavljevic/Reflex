@@ -5,7 +5,7 @@ namespace Reflex.Resolvers.OpenGenerics
 {
     internal class ScopedOpenGenericTypeResolversCollection : OpenGenericTypeResolversCollection
     {
-        public override Lifetime Lifetime => Lifetime.Transient;
+        public override Lifetime Lifetime => Lifetime.Scoped;
 
         public ScopedOpenGenericTypeResolversCollection(Type openGenericConcreteType) : base(openGenericConcreteType)
         {
