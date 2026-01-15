@@ -14,10 +14,15 @@ namespace Reflex.Core
         public List<Binding> Bindings { get; } = new();
         public event Action<Container> OnContainerBuilt;
 
+        private readonly Registrations registrations = new Registrations();
+
         public Container Build()
         {
             var disposables = new DisposableCollection();
             var resolversByContract = new Dictionary<Type, List<IResolver>>();
+            var finalRegistrations = Parent != null
+                ? new Registrations(registrations, Parent.Registrations)
+                : registrations;
 
             // Inherited resolvers
             if (Parent != null)
@@ -46,7 +51,7 @@ namespace Reflex.Core
             }
 
             Bindings.Clear();
-            var container = new Container(Name, Parent, resolversByContract, disposables);
+            var container = new Container(Name, Parent, resolversByContract, disposables, finalRegistrations);
             OnContainerBuilt?.Invoke(container);
             return container;
         }
@@ -174,6 +179,7 @@ namespace Reflex.Core
         {
             var binding = Binding.Validated(resolver, concrete, contracts);
             Bindings.Add(binding);
+            registrations.Add(resolver, new Registration(concrete, resolver.Lifetime, contracts));
             return this;
         }
     }

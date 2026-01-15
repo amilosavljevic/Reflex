@@ -16,6 +16,7 @@ namespace Reflex.Core
         public static Container ProjectContainer { get; internal set; }
         public string Name { get; }
         public Container Parent { get; }
+        public Registrations Registrations { get; }
         internal List<Container> Children { get; } = new();
         internal Dictionary<Type, List<IResolver>> ResolversByContract { get; }
         internal DisposableCollection Disposables { get; }
@@ -23,12 +24,13 @@ namespace Reflex.Core
         internal static readonly List<Container> RootContainers = new();
 #endif
 
-        internal Container(string name, Container parent, Dictionary<Type, List<IResolver>> resolversByContract, DisposableCollection disposables)
+        internal Container(string name, Container parent, Dictionary<Type, List<IResolver>> resolversByContract, DisposableCollection disposables, Registrations registrations)
         {
             Diagnosis.RegisterBuildCallSite(this);
             Name = name;
             Parent = parent;
             Parent?.Children.Add(this);
+            Registrations = registrations;
             ResolversByContract = resolversByContract;
             Disposables = disposables;
             OverrideSelfInjection();
