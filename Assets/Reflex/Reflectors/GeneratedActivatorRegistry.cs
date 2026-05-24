@@ -1,9 +1,16 @@
 using System;
 using Reflex.Caching;
 using Reflex.Delegates;
+using UnityEngine.Scripting;
 
 namespace Reflex.Reflectors
 {
+    // [Preserve] keeps the type alive under IL2CPP managed-code stripping. RegisterCompat is
+    // resolved from generated code via Type.GetType + GetMethod (reflection) — IL2CPP can't see
+    // that as a static reference, so without this attribute the entire registry could be stripped
+    // and generator-emitted activators would silently no-op (falling back to reflection-based
+    // construction). The attribute closes that gap.
+    [Preserve]
     public static class GeneratedActivatorRegistry
     {
         // Strongly-typed entry point. Source generators emitting code that DOES reference Reflex
@@ -23,6 +30,7 @@ namespace Reflex.Reflectors
         // and never names a Reflex type) populate the registry. The generator resolves this
         // method by name via Type.GetType once at module/runtime init, so the generated
         // assembly never needs to name ObjectActivator (which lives in Reflex.dll).
+        [Preserve]
         public static void RegisterCompat(Type concrete, Func<object[], object> activator, Type[] parameterTypes)
         {
             if (activator == null) throw new ArgumentNullException(nameof(activator));
