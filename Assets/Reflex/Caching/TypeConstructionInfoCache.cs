@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Reflex.Attributes;
+using Reflex.Delegates;
 using Reflex.Extensions;
 using Reflex.Reflectors;
 
@@ -19,8 +20,18 @@ namespace Reflex.Caching
                 info = Generate(type);
                 _dictionary.Add(key, info);
             }
-        
+
             return info;
+        }
+
+        // Pre-seeds the cache with an externally supplied activator (typically emitted by a
+        // source generator and installed via Reflex.Reflectors.GeneratedActivatorRegistry.Register).
+        // Called from module/runtime init before any container resolves, so no synchronization needed.
+        // Get() is left unchanged from upstream baseline; its existing memoization returns
+        // primed entries before Generate() is ever called.
+        internal static void Prime(Type type, ObjectActivator activator, Type[] parameterTypes)
+        {
+            _dictionary[type.TypeHandle.Value] = new TypeConstructionInfo(activator, parameterTypes);
         }
         
         private static TypeConstructionInfo Generate(Type type)

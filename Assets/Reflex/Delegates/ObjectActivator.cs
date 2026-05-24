@@ -1,4 +1,4 @@
 namespace Reflex.Delegates
 {
-    internal delegate object ObjectActivator(params object[] args);
+    public delegate object ObjectActivator(params object[] args);
 }
