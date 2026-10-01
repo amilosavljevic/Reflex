@@ -53,8 +53,24 @@ namespace Reflex.Core
             return ResolversByContract.ContainsKey(type);
         }
 
+        /// <summary>True once <see cref="Dispose"/> has started.</summary>
+        public bool IsDisposed { get; private set; }
+
+        /// <summary>
+        /// Disposes child containers, then this container's disposables. Idempotent and re-entrant: the
+        /// flag is set before anything is disposed, so a disposable that disposes this container again —
+        /// directly or through a wrapper — gets a no-op instead of a second pass over a collection that is
+        /// being disposed.
+        /// </summary>
         public void Dispose()
         {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            IsDisposed = true;
+
             foreach (var child in Children.Reversed())
             {
                 child.Dispose();
